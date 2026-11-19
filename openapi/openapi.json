@@ -1,0 +1,5770 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Stylome API",
+    "description": "Analyze text with an explicit model ID. **`stylome-1.2-large`** returns `human_written`, `ai_edited`, or `ai_generated` in `label`, plus low/medium/high `confidence`. These are the only scoring-related outputs. AI edited means retained human authorship with an AI contribution, not an estimated AI percentage. Confidence describes relative KNN support; it is not a probability of correctness. The 1.2 response omits numerical diagnostics, internal identities, and alternate decisions. `response_version` identifies the public schema and opaque `evaluation_version` identifies the frozen evaluation configuration.\n\nFor 1.2, omit `operating_point` to use **`0.01%`**, or choose `0.1%`. These names refer to calibration false-positive-rate targets, not a guarantee on new data. The response includes only the selected operating-point decision. Whitespace is collapsed without Unicode compatibility normalization; submit 200–10,000 normalized Unicode characters. Oversized inputs are rejected, never silently truncated.\n\nFixed-point FPR, recall, accuracy, confusion matrices, and confidence-tier summaries can be reproduced from labels using the published dataset selection, exclusions, preprocessing, class mappings, evaluation version, and operating point. ROC/AUROC and arbitrary threshold sweeps require continuous scores and are unavailable through the 1.2 public contract.\n\n**`stylome-1.0-large`** retains its model-specific 1.0 score/probability response and does not support operating-point selection or KNN confidence. Retired model IDs, including `stylome-large-1.0`, are rejected. Authentication, quotas, and data-retention policies are unchanged.",
+    "version": "1.5.0-rc.2"
+  },
+  "paths": {
+    "/api/v1/models": {
+      "get": {
+        "summary": "Public Models",
+        "operationId": "list_models",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicModelList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/key": {
+      "get": {
+        "summary": "Api Key Identity",
+        "operationId": "get_key",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyIdentity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment Required",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/limits": {
+      "get": {
+        "summary": "Api Limits",
+        "operationId": "get_limits",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiLimits"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment Required",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/usage": {
+      "get": {
+        "summary": "Developer Usage",
+        "operationId": "get_usage",
+        "security": [
+          {
+            "ApiKeyBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive UTC timestamp; timezone required. Default: seven days before end.",
+              "title": "Start"
+            },
+            "description": "Inclusive UTC timestamp; timezone required. Default: seven days before end."
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exclusive UTC timestamp; timezone required. Default: now.",
+              "title": "End"
+            },
+            "description": "Exclusive UTC timestamp; timezone required. Default: now."
+          },
+          {
+            "name": "group_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "day",
+                "model",
+                "key"
+              ],
+              "type": "string",
+              "default": "day",
+              "title": "Group By"
+            }
+          },
+          {
+            "name": "model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional model ID filter; retired IDs are accepted for history.",
+              "title": "Model"
+            },
+            "description": "Optional model ID filter; retired IDs are accepted for history."
+          },
+          {
+            "name": "key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{16}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional public key ID; never send a secret key here.",
+              "title": "Key"
+            },
+            "description": "Optional public key ID; never send a secret key here."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUsage"
+                }
+              }
+            }
+          },
+          "400": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "402": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Payment Required"
+          },
+          "403": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        }
+      }
+    },
+    "/api/v1/status": {
+      "get": {
+        "summary": "Developer Status",
+        "operationId": "get_status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiStatus"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/score": {
+      "post": {
+        "summary": "Authenticated Score",
+        "operationId": "score_text",
+        "security": [
+          {
+            "ApiKeyBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Standard-retention keys only. Project-wide, case-sensitive opaque key, 1–255 characters. Same text/model/operating point replays for 24 hours; different input returns 409. Replays consume the request-rate limit.",
+              "title": "Idempotency-Key"
+            },
+            "description": "Standard-retention keys only. Project-wide, case-sensitive opaque key, 1–255 characters. Same text/model/operating point replays for 24 hours; different input returns 409. Replays consume the request-rate limit."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiScoreRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiScore12"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ApiLegacyScore"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "model_version",
+                    "mapping": {
+                      "stylome-1.2-large": "#/components/schemas/ApiScore12",
+                      "stylome-1.0-large": "#/components/schemas/ApiLegacyScore"
+                    }
+                  },
+                  "title": "Response Score Text"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "400": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "402": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Payment Required"
+          },
+          "403": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "headers": {
+              "X-Request-ID": {
+                "description": "Unique HTTP attempt ID, including errors and replays.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Operation-ID": {
+                "description": "Original scoring operation ID; stable on an idempotent replay.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Idempotent-Replayed": {
+                "description": "true only when returning a saved response.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "X-Stylome-Data-Retention": {
+                "description": "none for zero-content keys; standard for retained scoring.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "standard"
+                  ]
+                }
+              },
+              "RateLimit": {
+                "description": "Account request-window remaining count and seconds until reset.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Account fixed-window request policy.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests allowed per account per minute.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in this account window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Window reset, Unix seconds.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Exempt": {
+                "description": "true for an operator-exempt key.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              },
+              "Retry-After": {
+                "description": "Minimum seconds before retry; retry only if the operation is safe to repeat.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiBalance": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "const": "USD",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "balance_usd": {
+            "type": "string",
+            "title": "Balance Usd"
+          },
+          "reserved_usd": {
+            "type": "string",
+            "title": "Reserved Usd"
+          },
+          "available_usd": {
+            "type": "string",
+            "title": "Available Usd"
+          },
+          "billing_review_required": {
+            "type": "boolean",
+            "title": "Billing Review Required"
+          },
+          "topup_min_usd": {
+            "type": "string",
+            "title": "Topup Min Usd"
+          },
+          "topup_max_usd": {
+            "type": "string",
+            "title": "Topup Max Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "balance_usd",
+          "reserved_usd",
+          "available_usd",
+          "billing_review_required",
+          "topup_min_usd",
+          "topup_max_usd"
+        ],
+        "title": "ApiBalance"
+      },
+      "ApiErrorDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "retryable": {
+            "type": "boolean",
+            "title": "Retryable"
+          },
+          "param": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Param"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ApiErrorField"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "request_id",
+          "retryable"
+        ],
+        "title": "ApiErrorDetail"
+      },
+      "ApiErrorField": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Loc"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Msg"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ApiErrorField"
+      },
+      "ApiErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ApiErrorResponse"
+      },
+      "ApiKeyIdentity": {
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "api_key",
+            "title": "Object",
+            "default": "api_key"
+          },
+          "public_id": {
+            "type": "string",
+            "title": "Public Id"
+          },
+          "project_id": {
+            "type": "string",
+            "title": "Project Id"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scopes"
+          },
+          "retention_mode": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "zero_content"
+            ],
+            "title": "Retention Mode"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "rate_limit_exempt": {
+            "type": "boolean",
+            "title": "Rate Limit Exempt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "public_id",
+          "project_id",
+          "scopes",
+          "retention_mode",
+          "expires_at",
+          "rate_limit_exempt"
+        ],
+        "title": "ApiKeyIdentity"
+      },
+      "ApiLegacyScore": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "mock": {
+            "type": "boolean",
+            "const": false,
+            "title": "Mock",
+            "default": false
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score",
+            "description": "Legacy 1.0 result only; omitted for 1.2."
+          },
+          "content_hash": {
+            "type": "string",
+            "title": "Content Hash"
+          },
+          "model_version": {
+            "type": "string",
+            "const": "stylome-1.0-large",
+            "title": "Model Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "detector_score": {
+            "type": "number",
+            "title": "Detector Score"
+          },
+          "threshold": {
+            "type": "number",
+            "title": "Threshold"
+          },
+          "margin": {
+            "type": "number",
+            "title": "Margin"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "probabilities": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probabilities",
+            "description": "Legacy 1.0 probabilities only; omitted for 1.2."
+          },
+          "binary_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Binary Label"
+          },
+          "operating_point": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operating Point"
+          },
+          "operating_points": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operating Points"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence",
+            "description": "1.2 relative KNN support for the returned class, based on neighbor agreement, proximity, and decision margin against calibration examples. Not a probability of correctness. Not provided for 1.0."
+          },
+          "confidence_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Evidence"
+          },
+          "classification_contract": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classification Contract"
+          },
+          "confidence_contract": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Contract"
+          },
+          "confidence_artifact_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Artifact Sha256"
+          },
+          "uncertainty": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uncertainty"
+          },
+          "knn_decision": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Knn Decision"
+          },
+          "scoring_contract": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scoring Contract"
+          },
+          "model_revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Revision"
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptCapability"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoreUsage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Committed normalized-character usage and cost; null only for a replay from before prepaid billing."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "verdict",
+          "content_hash",
+          "model_version",
+          "created_at",
+          "detector_score",
+          "threshold",
+          "margin",
+          "label",
+          "usage"
+        ],
+        "title": "ApiLegacyScore",
+        "description": "Stylome 1.0 Large's existing score/probability response. No 1.2 confidence is computed.",
+        "example": {
+          "content_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "created_at": "2026-09-20T12:00:00Z",
+          "detector_score": -2.0,
+          "id": "scan_example",
+          "label": "human_written",
+          "margin": -10.0,
+          "model_version": "stylome-1.0-large",
+          "probabilities": {
+            "ai_edited": 0.1,
+            "ai_generated": 0.1,
+            "human_written": 0.8
+          },
+          "threshold": 8.0,
+          "verdict": "human_typical"
+        }
+      },
+      "ApiLimits": {
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "api_limits",
+            "title": "Object",
+            "default": "api_limits"
+          },
+          "measured_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Measured At"
+          },
+          "rate_limit_scope": {
+            "type": "string",
+            "const": "account",
+            "title": "Rate Limit Scope",
+            "default": "account"
+          },
+          "window_seconds": {
+            "type": "integer",
+            "title": "Window Seconds",
+            "default": 60
+          },
+          "request_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Limit"
+          },
+          "remaining_requests": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Requests"
+          },
+          "resets_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resets At"
+          },
+          "rate_limit_exempt": {
+            "type": "boolean",
+            "title": "Rate Limit Exempt"
+          },
+          "request_timeout_seconds": {
+            "type": "integer",
+            "title": "Request Timeout Seconds",
+            "default": 110
+          },
+          "idempotency_lifetime_seconds": {
+            "type": "integer",
+            "title": "Idempotency Lifetime Seconds",
+            "default": 86400
+          },
+          "idempotency_supported": {
+            "type": "boolean",
+            "title": "Idempotency Supported"
+          },
+          "retention_mode": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "zero_content"
+            ],
+            "title": "Retention Mode"
+          },
+          "prepaid": {
+            "$ref": "#/components/schemas/ApiBalance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "measured_at",
+          "request_limit",
+          "remaining_requests",
+          "resets_at",
+          "rate_limit_exempt",
+          "idempotency_supported",
+          "retention_mode",
+          "prepaid"
+        ],
+        "title": "ApiLimits"
+      },
+      "ApiScore12": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "mock": {
+            "type": "boolean",
+            "const": false,
+            "title": "Mock",
+            "default": false
+          },
+          "label": {
+            "type": "string",
+            "enum": [
+              "human_written",
+              "ai_edited",
+              "ai_generated"
+            ],
+            "title": "Label"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Confidence"
+          },
+          "content_hash": {
+            "type": "string",
+            "title": "Content Hash"
+          },
+          "model_version": {
+            "type": "string",
+            "const": "stylome-1.2-large",
+            "title": "Model Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "operating_point": {
+            "type": "string",
+            "enum": [
+              "0.01%",
+              "0.1%"
+            ],
+            "title": "Operating Point"
+          },
+          "response_version": {
+            "type": "string",
+            "const": "stylome-public-v2",
+            "title": "Response Version",
+            "default": "stylome-public-v2"
+          },
+          "evaluation_version": {
+            "type": "string",
+            "title": "Evaluation Version"
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublicReceiptCapability"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoreUsage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Committed normalized-character usage and cost; null only for a replay from before prepaid billing."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "confidence",
+          "content_hash",
+          "model_version",
+          "created_at",
+          "operating_point",
+          "evaluation_version",
+          "usage"
+        ],
+        "title": "ApiScore12",
+        "example": {
+          "confidence": "medium",
+          "content_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "created_at": "2026-09-18T12:00:00Z",
+          "evaluation_version": "eval_12_001",
+          "id": "scan_0123456789ab",
+          "label": "ai_edited",
+          "mock": false,
+          "model_version": "stylome-1.2-large",
+          "operating_point": "0.01%",
+          "response_version": "stylome-public-v2"
+        }
+      },
+      "ApiScoreRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 100000,
+            "minLength": 1,
+            "title": "Text",
+            "description": "Text to analyze. For stylome-1.2-large, whitespace is collapsed without Unicode compatibility normalization; the result must contain 200–10,000 Unicode characters. Inputs are never silently truncated."
+          },
+          "model": {
+            "type": "string",
+            "enum": [
+              "stylome-1.2-large",
+              "stylome-1.0-large"
+            ],
+            "title": "Model",
+            "description": "Required public model ID. Use stylome-1.2-large for ternary classification, or stylome-1.0-large for the 1.0 response contract."
+          },
+          "operating_point": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "0.01%",
+                  "0.1%"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operating Point",
+            "description": "stylome-1.2-large only. Omission selects 0.01%; 0.1% is also available. These are calibration false-positive-rate targets, not confidence levels or guarantees of the false-positive rate on new data. Omit this field for stylome-1.0-large."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text",
+          "model"
+        ],
+        "title": "ApiScoreRequest"
+      },
+      "ApiStatus": {
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "api_status",
+            "title": "Object",
+            "default": "api_status"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "operational",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At"
+          },
+          "database": {
+            "type": "string",
+            "enum": [
+              "reachable",
+              "unavailable"
+            ],
+            "title": "Database"
+          },
+          "inference": {
+            "type": "string",
+            "enum": [
+              "configured",
+              "unconfigured"
+            ],
+            "title": "Inference"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": "API and database reachability with inference configuration presence. Does not run inference or measure model availability."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "checked_at",
+          "database",
+          "inference"
+        ],
+        "title": "ApiStatus"
+      },
+      "ApiUsage": {
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "api_usage",
+            "title": "Object",
+            "default": "api_usage"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "measured_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Measured At"
+          },
+          "group_by": {
+            "type": "string",
+            "enum": [
+              "day",
+              "model",
+              "key"
+            ],
+            "title": "Group By"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/UsageCounts"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/UsageBucket"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": "Request-ledger operations by start time; excludes idempotent replays and failures before ledger creation. Costs are exact prepaid debits; historical unpriced requests have no inferred charge."
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "measured_at",
+          "group_by",
+          "totals",
+          "data"
+        ],
+        "title": "ApiUsage"
+      },
+      "PublicModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "recommended": {
+            "type": "boolean",
+            "title": "Recommended"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "deprecated"
+            ],
+            "title": "Status",
+            "default": "available"
+          },
+          "deprecation_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deprecation Date"
+          },
+          "retirement_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retirement Date"
+          },
+          "min_characters": {
+            "type": "integer",
+            "title": "Min Characters",
+            "default": 200
+          },
+          "max_characters": {
+            "type": "integer",
+            "title": "Max Characters",
+            "default": 10000
+          },
+          "max_request_bytes": {
+            "type": "integer",
+            "title": "Max Request Bytes",
+            "default": 131072
+          },
+          "length_unit": {
+            "type": "string",
+            "const": "normalized_unicode_code_points",
+            "title": "Length Unit",
+            "default": "normalized_unicode_code_points"
+          },
+          "normalization": {
+            "type": "string",
+            "title": "Normalization"
+          },
+          "operating_points": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Operating Points"
+          },
+          "default_operating_point": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Operating Point"
+          },
+          "response_kind": {
+            "type": "string",
+            "enum": [
+              "categorical",
+              "legacy_numeric"
+            ],
+            "title": "Response Kind"
+          },
+          "zero_content_retention_supported": {
+            "type": "boolean",
+            "title": "Zero Content Retention Supported",
+            "default": true
+          },
+          "price_usd_per_million_characters": {
+            "type": "string",
+            "title": "Price Usd Per Million Characters",
+            "default": "5.000000"
+          },
+          "pricing_version": {
+            "type": "string",
+            "title": "Pricing Version",
+            "default": "api-characters-usd-2026-09-20"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "description",
+          "recommended",
+          "normalization",
+          "operating_points",
+          "default_operating_point",
+          "response_kind"
+        ],
+        "title": "PublicModel"
+      },
+      "PublicModelList": {
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list",
+            "title": "Object",
+            "default": "list"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PublicModel"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "PublicModelList"
+      },
+      "PublicReceiptCapability": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "share_token": {
+            "type": "string",
+            "title": "Share Token"
+          },
+          "public_share": {
+            "type": "boolean",
+            "const": false,
+            "title": "Public Share",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "share_token"
+        ],
+        "title": "PublicReceiptCapability"
+      },
+      "ReceiptCapability": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "share_token": {
+            "type": "string",
+            "title": "Share Token"
+          },
+          "public_share": {
+            "type": "boolean",
+            "const": false,
+            "title": "Public Share",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "share_token"
+        ],
+        "title": "ReceiptCapability"
+      },
+      "ScoreUsage": {
+        "properties": {
+          "input_characters": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Input Characters",
+            "description": "Normalized Unicode code points; the same normalization used for inference and input limits."
+          },
+          "cost_usd": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d{6}$",
+            "title": "Cost Usd",
+            "description": "Original operation's committed cost. An idempotent replay does not charge this amount again."
+          },
+          "currency": {
+            "type": "string",
+            "const": "USD",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "pricing_version": {
+            "type": "string",
+            "title": "Pricing Version",
+            "default": "api-characters-usd-2026-09-20"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "input_characters",
+          "cost_usd"
+        ],
+        "title": "ScoreUsage"
+      },
+      "UsageBucket": {
+        "properties": {
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "successes": {
+            "type": "integer",
+            "title": "Successes"
+          },
+          "failures": {
+            "type": "integer",
+            "title": "Failures"
+          },
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
+          "billed_characters": {
+            "type": "integer",
+            "title": "Billed Characters",
+            "default": 0
+          },
+          "cost_usd": {
+            "type": "string",
+            "title": "Cost Usd",
+            "default": "0.000000"
+          },
+          "unpriced_requests": {
+            "type": "integer",
+            "title": "Unpriced Requests",
+            "default": 0
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requests",
+          "successes",
+          "failures",
+          "pending",
+          "value"
+        ],
+        "title": "UsageBucket"
+      },
+      "UsageCounts": {
+        "properties": {
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "successes": {
+            "type": "integer",
+            "title": "Successes"
+          },
+          "failures": {
+            "type": "integer",
+            "title": "Failures"
+          },
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
+          "billed_characters": {
+            "type": "integer",
+            "title": "Billed Characters",
+            "default": 0
+          },
+          "cost_usd": {
+            "type": "string",
+            "title": "Cost Usd",
+            "default": "0.000000"
+          },
+          "unpriced_requests": {
+            "type": "integer",
+            "title": "Unpriced Requests",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "requests",
+          "successes",
+          "failures",
+          "pending"
+        ],
+        "title": "UsageCounts"
+      },
+      "Verdict": {
+        "type": "string",
+        "enum": [
+          "human_typical",
+          "mixed_signals",
+          "ai_typical"
+        ],
+        "title": "Verdict"
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyBearer": {
+        "type": "http",
+        "description": "A Stylome developer API key or an approved OAuth access token in the Authorization header.",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

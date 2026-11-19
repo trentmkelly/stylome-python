@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "stylome-client"
+version = "0.3.0"
+description = "Typed synchronous and asynchronous client for the Stylome API"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["httpx>=0.23.1,<0.29.0", "attrs>=22.2.0"]
+
+[project.urls]
+Homepage = "https://stylome.io"
+Repository = "https://github.com/trentmkelly/stylome-python"
+Issues = "https://github.com/trentmkelly/stylome-python/issues"
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "ruff>=0.12,<0.18", "build>=1.2,<2", "twine>=6,<7"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["stylome_client"]
+
+[tool.hatch.build.targets.sdist]
+include = ["stylome_client", "openapi", "scripts", "tests", "README.md", "LICENSE", "pyproject.toml"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["F", "I", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"stylome_client/**/*.py" = ["UP042"]

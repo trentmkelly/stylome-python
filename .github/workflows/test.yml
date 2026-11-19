@@ -1,0 +1,26 @@
+name: Test SDK
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install ${{ matrix.python }}
+      - run: uv sync --python ${{ matrix.python }} --extra dev
+      - run: uv run pytest -q
+      - run: uv run ruff check .
+      - run: uv build
+      - run: uv run twine check dist/*
+  generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: bash scripts/generate.sh
+      - run: git diff --exit-code -- stylome_client
