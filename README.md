@@ -39,7 +39,7 @@ Replace the example text with a complete document. For async calls, use `async w
 
 For 1.2, set `operating_point=ApiScoreRequestOperatingPointType0("0.1%")` on the request to use the other point (import the enum from `stylome_client.models`). The default is `0.01%`. These are calibration FPR targets, not guarantees on your documents; confidence is relative support, not a probability of correctness.
 
-Documented HTTP errors are returned as `ApiErrorResponse`; inspect `status_code` and `parsed`. Unexpected statuses can raise `UnexpectedStatus`; transport failures raise HTTPX exceptions. Requests are not retried automatically. Use `idempotency_key=` for safe replay with standard-retention keys; zero-content keys do not support it. Avoid logging credentials, raw responses, or receipt share tokens. Input constraints are enforced by the API, not the generated dataclasses.
+Scoring errors are returned as `ApiErrorResponse`; inspect `status_code` and `parsed`. Unexpected statuses can raise `UnexpectedStatus`; transport failures raise HTTPX exceptions. Requests are not retried automatically. Use `idempotency_key=` for safe replay with standard-retention keys; zero-content keys do not support it. Avoid logging credentials, raw responses, or receipt share tokens. Input constraints are enforced by the API, not the generated dataclasses.
 
 ## Development
 
